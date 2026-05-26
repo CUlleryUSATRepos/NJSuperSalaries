@@ -1,0 +1,9 @@
+﻿.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+build_dashboard_log.txt
+docs/index_backup_*.html
+scripts/build_dashboard_backup_*.py
+
+.idea/
