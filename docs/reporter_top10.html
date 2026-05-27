@@ -1,0 +1,645 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Reporter Superintendent Salary List Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 32px;
+      line-height: 1.5;
+      color: #222;
+      max-width: 1200px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .note {
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      background: #fafafa;
+    }
+
+    .county-list {
+      columns: 2;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .option-list {
+      columns: 2;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      background: white;
+    }
+
+    button.primary {
+      background: #1f5aa6;
+      border-color: #1f5aa6;
+      color: white;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 380px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 14px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    .preview {
+      border: 1px solid #ddd;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      background: white;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .section-break {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #ddd;
+    }
+
+    @media (max-width: 850px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .county-list,
+      .option-list {
+        columns: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Reporter Superintendent Salary List Generator</h1>
+
+  <p class="note">
+    Select one or more New Jersey counties, choose what to rank by, then generate a copy-ready HTML list.
+  </p>
+
+  <div class="controls">
+    <div class="panel">
+      <h2>Select counties</h2>
+
+      <div style="margin-bottom: 12px;">
+        <button type="button" onclick="selectAllCounties()">Select all</button>
+        <button type="button" onclick="clearCounties()">Clear</button>
+      </div>
+
+      <div id="countyList" class="county-list"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Story options</h2>
+
+      <label for="listTitle">Headline/title</label>
+      <input id="listTitle" type="text" value="Top 10 superintendent base salaries in selected New Jersey counties">
+
+      <br><br>
+
+      <label for="rankField">Rank by</label>
+      <select id="rankField" onchange="updateDefaultTitle()">
+        <option value="baseSalary">Base salary</option>
+        <option value="listedCompensation">Known listed compensation</option>
+        <option value="workDays">Work days</option>
+        <option value="vacationDays">Vacation days</option>
+        <option value="sickDays">Sick days</option>
+        <option value="personalDays">Personal days</option>
+        <option value="consultingDays">Consulting days</option>
+        <option value="allowances">Allowances</option>
+        <option value="bonuses">Bonuses</option>
+        <option value="stipends">Stipends</option>
+        <option value="insurance">Insurance</option>
+        <option value="retirementPlan">Retirement plan</option>
+        <option value="postEmploymentBenefits">Post-employment benefits</option>
+        <option value="remuneration">Other remuneration</option>
+      </select>
+
+      <br><br>
+
+      <label for="listLimit">Number of entries</label>
+      <input id="listLimit" type="number" min="1" max="50" value="10">
+
+      <div class="section-break">
+        <h3>Include in bullets</h3>
+
+        <div class="option-list">
+          <label><input type="checkbox" class="detailCheck" value="baseSalary" checked> Base salary</label>
+          <label><input type="checkbox" class="detailCheck" value="listedCompensation"> Known listed compensation</label>
+          <label><input type="checkbox" class="detailCheck" value="stateRank" checked> Statewide rank</label>
+          <label><input type="checkbox" class="detailCheck" value="countyRank" checked> County rank</label>
+          <label><input type="checkbox" class="detailCheck" value="workDays"> Work days</label>
+          <label><input type="checkbox" class="detailCheck" value="vacationDays"> Vacation days</label>
+          <label><input type="checkbox" class="detailCheck" value="sickDays"> Sick days</label>
+          <label><input type="checkbox" class="detailCheck" value="personalDays"> Personal days</label>
+          <label><input type="checkbox" class="detailCheck" value="consultingDays"> Consulting days</label>
+          <label><input type="checkbox" class="detailCheck" value="contractDates"> Contract dates</label>
+          <label><input type="checkbox" class="detailCheck" value="sharedStatus"> Shared superintendent status</label>
+          <label><input type="checkbox" class="detailCheck" value="allowances"> Allowances</label>
+          <label><input type="checkbox" class="detailCheck" value="bonuses"> Bonuses</label>
+          <label><input type="checkbox" class="detailCheck" value="stipends"> Stipends</label>
+          <label><input type="checkbox" class="detailCheck" value="insurance"> Insurance</label>
+          <label><input type="checkbox" class="detailCheck" value="retirementPlan"> Retirement plan</label>
+          <label><input type="checkbox" class="detailCheck" value="postEmploymentBenefits"> Post-employment benefits</label>
+          <label><input type="checkbox" class="detailCheck" value="remuneration"> Other remuneration</label>
+        </div>
+      </div>
+
+      <div class="section-break">
+        <button type="button" class="primary" onclick="generateList()">Generate HTML list</button>
+        <button type="button" onclick="copyOutput()">Copy HTML</button>
+
+        <p id="status" class="small"></p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Copy-ready HTML</h2>
+  <textarea id="output" readonly></textarea>
+
+  <h2>Preview</h2>
+  <div id="preview" class="preview">
+    <p class="small">Generated list will appear here.</p>
+  </div>
+
+<script>
+let allRows = [];
+let superintendentRows = [];
+
+const rankLabels = {
+  baseSalary: "base salary",
+  listedCompensation: "known listed compensation",
+  workDays: "work days",
+  vacationDays: "vacation days",
+  sickDays: "sick days",
+  personalDays: "personal days",
+  consultingDays: "consulting days",
+  allowances: "allowances",
+  bonuses: "bonuses",
+  stipends: "stipends",
+  insurance: "insurance",
+  retirementPlan: "retirement plan",
+  postEmploymentBenefits: "post-employment benefits",
+  remuneration: "other remuneration"
+};
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const cleaned = String(value).replace(/[$,]/g, "").trim();
+  const numberValue = Number(cleaned);
+
+  if (Number.isFinite(numberValue)) {
+    return numberValue;
+  }
+
+  return null;
+}
+
+function formatMoney(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "";
+  }
+
+  return "$" + Math.round(Number(value)).toLocaleString("en-US");
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "";
+  }
+
+  return Math.round(Number(value)).toLocaleString("en-US");
+}
+
+function ordinal(n) {
+  n = Number(n);
+
+  if (!Number.isFinite(n)) {
+    return "";
+  }
+
+  if (n % 100 >= 10 && n % 100 <= 20) {
+    return n + "th";
+  }
+
+  const last = n % 10;
+
+  if (last === 1) return n + "st";
+  if (last === 2) return n + "nd";
+  if (last === 3) return n + "rd";
+
+  return n + "th";
+}
+
+function normalizeName(name) {
+  return String(name || "").replace(/\s+/g, " ").trim();
+}
+
+function formatDate(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  return raw;
+}
+
+function prepareRows(rawRows) {
+  allRows = rawRows;
+
+  superintendentRows = rawRows
+    .filter(row => String(row.emp_job_title || "").trim() === "Superintendent")
+    .map(row => {
+      return {
+        county: String(row.coname || "").trim(),
+        district: String(row.distname || "").trim(),
+        name: normalizeName(row.emp_name),
+
+        baseSalary: toNumber(row.emp_base_salary_num),
+        listedCompensation: toNumber(row.known_listed_compensation_num),
+
+        workDays: toNumber(row.emp_work_day),
+        vacationDays: toNumber(row.emp_vaca_day),
+        sickDays: toNumber(row.emp_sick_day),
+        personalDays: toNumber(row.emp_persn_day),
+        consultingDays: toNumber(row.emp_cnslt_day),
+
+        contractBegin: formatDate(row.emp_begin_date),
+        contractEnd: formatDate(row.emp_end_date),
+
+        shared: String(row.emp_shared || "").trim(),
+        sharedStatus: String(row.shared_context_status || "").trim(),
+        sharedNote: String(row.shared_context_note || "").trim(),
+
+        allowances: toNumber(row.total_allowances_num),
+        bonuses: toNumber(row.total_bonuses_num),
+        stipends: toNumber(row.total_stipends_num),
+        insurance: toNumber(row.total_insurance_num),
+        retirementPlan: toNumber(row.total_retirement_plan_num),
+        postEmploymentBenefits: toNumber(row.total_post_employment_benefits_num),
+        remuneration: toNumber(row.total_remuneration_num),
+
+        raw: row
+      };
+    })
+    .filter(row => row.county && row.district && row.name && row.baseSalary !== null);
+
+  addRanks();
+}
+
+function addRanks() {
+  const rankFields = Object.keys(rankLabels);
+
+  rankFields.forEach(field => {
+    const statewideSorted = [...superintendentRows]
+      .filter(row => row[field] !== null && row[field] !== undefined)
+      .sort((a, b) => b[field] - a[field]);
+
+    statewideSorted.forEach((row, index) => {
+      row[field + "StateRank"] = index + 1;
+    });
+
+    const countyGroups = {};
+
+    superintendentRows.forEach(row => {
+      if (row[field] === null || row[field] === undefined) {
+        return;
+      }
+
+      if (!countyGroups[row.county]) {
+        countyGroups[row.county] = [];
+      }
+
+      countyGroups[row.county].push(row);
+    });
+
+    Object.keys(countyGroups).forEach(county => {
+      countyGroups[county]
+        .sort((a, b) => b[field] - a[field])
+        .forEach((row, index) => {
+          row[field + "CountyRank"] = index + 1;
+        });
+    });
+  });
+}
+
+function buildCountyList() {
+  const counties = [...new Set(superintendentRows.map(row => row.county))]
+    .sort((a, b) => a.localeCompare(b));
+
+  const countyList = document.getElementById("countyList");
+
+  countyList.innerHTML = counties.map(county => {
+    const safeId = "county_" + county.replace(/[^a-z0-9]/gi, "_");
+
+    return `
+      <label>
+        <input type="checkbox" class="countyCheck" id="${safeId}" value="${county}">
+        ${county}
+      </label>
+    `;
+  }).join("");
+}
+
+function getSelectedCounties() {
+  return Array.from(document.querySelectorAll(".countyCheck:checked"))
+    .map(box => box.value);
+}
+
+function getSelectedDetails() {
+  return Array.from(document.querySelectorAll(".detailCheck:checked"))
+    .map(box => box.value);
+}
+
+function selectAllCounties() {
+  document.querySelectorAll(".countyCheck").forEach(box => box.checked = true);
+}
+
+function clearCounties() {
+  document.querySelectorAll(".countyCheck").forEach(box => box.checked = false);
+}
+
+function updateDefaultTitle() {
+  const rankField = document.getElementById("rankField").value;
+  const titleBox = document.getElementById("listTitle");
+
+  titleBox.value = `Top 10 superintendent ${rankLabels[rankField]} totals in selected New Jersey counties`;
+}
+
+function addMoneyDetail(parts, row, field, label) {
+  const value = row[field];
+
+  if (value !== null && value !== undefined && Number(value) !== 0) {
+    parts.push(`${label} of ${formatMoney(value)}`);
+  }
+}
+
+function addDayDetail(parts, row, field, label) {
+  const value = row[field];
+
+  if (value !== null && value !== undefined) {
+    parts.push(`${formatNumber(value)} ${label}`);
+  }
+}
+
+function buildRankSentence(row, rankField, selectedDetails) {
+  const rankValue = row[rankField];
+  const rankLabel = rankLabels[rankField];
+
+  if (rankValue === null || rankValue === undefined) {
+    return "";
+  }
+
+  const countyRank = row[rankField + "CountyRank"];
+  const stateRank = row[rankField + "StateRank"];
+
+  let sentence = "";
+
+  if (rankField === "baseSalary" || rankField === "listedCompensation" || rankField === "allowances" || rankField === "bonuses" || rankField === "stipends" || rankField === "insurance" || rankField === "retirementPlan" || rankField === "postEmploymentBenefits" || rankField === "remuneration") {
+    sentence = `Superintendent ${row.name} had ${rankLabel} of ${formatMoney(rankValue)}`;
+  } else {
+    sentence = `Superintendent ${row.name} had ${formatNumber(rankValue)} ${rankLabel}`;
+  }
+
+  const rankParts = [];
+
+  if (selectedDetails.includes("countyRank")) {
+    rankParts.push(`${ordinal(countyRank)} in ${row.county} County`);
+  }
+
+  if (selectedDetails.includes("stateRank")) {
+    rankParts.push(`${ordinal(stateRank)} statewide among superintendents`);
+  }
+
+  if (rankParts.length > 0) {
+    sentence += `, ranking ${rankParts.join(" and ")}`;
+  }
+
+  sentence += ".";
+
+  return sentence;
+}
+
+function buildDetailSentences(row, rankField, selectedDetails) {
+  const sentences = [];
+
+  const compParts = [];
+
+  if (selectedDetails.includes("baseSalary") && rankField !== "baseSalary") {
+    addMoneyDetail(compParts, row, "baseSalary", "a base salary");
+  }
+
+  if (selectedDetails.includes("listedCompensation") && rankField !== "listedCompensation") {
+    addMoneyDetail(compParts, row, "listedCompensation", "known listed compensation");
+  }
+
+  if (selectedDetails.includes("allowances") && rankField !== "allowances") {
+    addMoneyDetail(compParts, row, "allowances", "allowances");
+  }
+
+  if (selectedDetails.includes("bonuses" ) && rankField !== "bonuses") {
+    addMoneyDetail(compParts, row, "bonuses", "bonuses");
+  }
+
+  if (selectedDetails.includes("stipends") && rankField !== "stipends") {
+    addMoneyDetail(compParts, row, "stipends", "stipends");
+  }
+
+  if (selectedDetails.includes("insurance") && rankField !== "insurance") {
+    addMoneyDetail(compParts, row, "insurance", "insurance");
+  }
+
+  if (selectedDetails.includes("retirementPlan") && rankField !== "retirementPlan") {
+    addMoneyDetail(compParts, row, "retirementPlan", "retirement plan payments");
+  }
+
+  if (selectedDetails.includes("postEmploymentBenefits") && rankField !== "postEmploymentBenefits") {
+    addMoneyDetail(compParts, row, "postEmploymentBenefits", "post-employment benefits");
+  }
+
+  if (selectedDetails.includes("remuneration") && rankField !== "remuneration") {
+    addMoneyDetail(compParts, row, "remuneration", "other remuneration");
+  }
+
+  if (compParts.length > 0) {
+    sentences.push(`The district also listed ${compParts.join(", ")}.`);
+  }
+
+  const dayParts = [];
+
+  if (selectedDetails.includes("workDays") && rankField !== "workDays") {
+    addDayDetail(dayParts, row, "workDays", "work days");
+  }
+
+  if (selectedDetails.includes("vacationDays") && rankField !== "vacationDays") {
+    addDayDetail(dayParts, row, "vacationDays", "vacation days");
+  }
+
+  if (selectedDetails.includes("sickDays") && rankField !== "sickDays") {
+    addDayDetail(dayParts, row, "sickDays", "sick days");
+  }
+
+  if (selectedDetails.includes("personalDays") && rankField !== "personalDays") {
+    addDayDetail(dayParts, row, "personalDays", "personal days");
+  }
+
+  if (selectedDetails.includes("consultingDays") && rankField !== "consultingDays") {
+    addDayDetail(dayParts, row, "consultingDays", "consulting days");
+  }
+
+  if (dayParts.length > 0) {
+    sentences.push(`The contract lists ${dayParts.join(", ")}.`);
+  }
+
+  if (selectedDetails.includes("contractDates") && row.contractBegin && row.contractEnd) {
+    sentences.push(`The listed contract term runs from ${row.contractBegin} to ${row.contractEnd}.`);
+  }
+
+  if (selectedDetails.includes("sharedStatus")) {
+    if (row.shared === "Y") {
+      if (row.sharedNote) {
+        sentences.push(`The salary file marks the position as shared: ${row.sharedNote}.`);
+      } else if (row.sharedStatus) {
+        sentences.push(`The salary file marks the position as shared; ${row.sharedStatus}.`);
+      } else {
+        sentences.push(`The salary file marks the position as shared.`);
+      }
+    } else if (row.shared === "N") {
+      sentences.push(`The salary file does not mark the position as shared.`);
+    }
+  }
+
+  return sentences;
+}
+
+function generateList() {
+  const selectedCounties = getSelectedCounties();
+  const selectedDetails = getSelectedDetails();
+  const rankField = document.getElementById("rankField").value;
+  const title = document.getElementById("listTitle").value.trim();
+  const limit = Number(document.getElementById("listLimit").value) || 10;
+  const status = document.getElementById("status");
+
+  if (selectedCounties.length === 0) {
+    status.textContent = "Select at least one county.";
+    return;
+  }
+
+  const selectedRows = superintendentRows
+    .filter(row => selectedCounties.includes(row.county))
+    .filter(row => row[rankField] !== null && row[rankField] !== undefined)
+    .sort((a, b) => b[rankField] - a[rankField])
+    .slice(0, limit);
+
+  if (selectedRows.length === 0) {
+    status.textContent = "No matching superintendent rows found.";
+    return;
+  }
+
+  let html = `<h2>${title}</h2>\n`;
+  html += `<ul>\n`;
+
+  selectedRows.forEach(row => {
+    const rankSentence = buildRankSentence(row, rankField, selectedDetails);
+    const detailSentences = buildDetailSentences(row, rankField, selectedDetails);
+
+    html += `  <li><strong>${row.district}, ${row.county} County</strong>: ${rankSentence}`;
+
+    if (detailSentences.length > 0) {
+      html += ` ${detailSentences.join(" ")}`;
+    }
+
+    html += `</li>\n`;
+  });
+
+  html += `</ul>`;
+
+  document.getElementById("output").value = html;
+  document.getElementById("preview").innerHTML = html;
+
+  status.textContent = `Generated ${selectedRows.length} entries ranked by ${rankLabels[rankField]}.`;
+}
+
+function copyOutput() {
+  const output = document.getElementById("output");
+
+  output.select();
+  output.setSelectionRange(0, 999999);
+
+  navigator.clipboard.writeText(output.value);
+
+  document.getElementById("status").textContent = "Copied HTML to clipboard.";
+}
+
+fetch("superintendent_salaries.json")
+  .then(response => response.json())
+  .then(rawRows => {
+    prepareRows(rawRows);
+    buildCountyList();
+
+    document.getElementById("status").textContent =
+      `Loaded ${superintendentRows.length.toLocaleString()} superintendent rows from ${allRows.length.toLocaleString()} total salary rows.`;
+  })
+  .catch(error => {
+    document.getElementById("status").textContent = "Could not load superintendent_salaries.json.";
+    console.error(error);
+  });
+</script>
+
+</body>
+</html>
