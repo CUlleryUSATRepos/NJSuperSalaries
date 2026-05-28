@@ -103,3 +103,16 @@ git commit -m "Update dashboard documentation"
 git push origin main
 
 GitHub Pages will rebuild from the `docs` folder.
+
+## Source data
+
+The original New Jersey superintendent salary files were downloaded from the New Jersey Department of Education's User Friendly Budget page:
+
+https://www.nj.gov/education/budget/ufb/
+
+The dashboard uses cleaned/exported versions of the source data in the `docs` folder:
+
+- `docs/superintendent_salaries.csv`
+- `docs/superintendent_salaries.json`
+
+The original downloaded files are not required for the public GitHub Pages site to run. The public site reads from the cleaned JSON file.
